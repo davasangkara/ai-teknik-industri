@@ -8,8 +8,10 @@ from PIL import Image
 API_KEY = "AIzaSyAJ9EQwUFj-v8mg4mSvI_4DiJELomx0GXU"
 genai.configure(api_key=API_KEY)
 
-model_text = genai.GenerativeModel("gemini-pro")
-model_vision = genai.GenerativeModel("gemini-pro-vision")
+# MODEL TERBARU (SUPPORT TEKS + GAMBAR)
+model = genai.GenerativeModel(
+    model_name="models/gemini-1.5-flash"
+)
 
 # =============================
 # UI STREAMLIT
@@ -20,10 +22,11 @@ st.set_page_config(
     layout="centered"
 )
 
-st.title("AI Asisten Teknik Industri")
+st.title("🤖 AI Asisten Teknik Industri")
 st.write(
-    "Asisten AI untuk membantu mata kuliah Teknik Industri. "
-    "Ketik pertanyaan atau upload gambar (soal, diagram, grafik, dll)."
+    "Asisten AI untuk membantu mata kuliah Teknik Industri.\n\n"
+    "📌 Bisa menjawab pertanyaan teori\n"
+    "📌 Bisa menganalisis gambar (diagram, grafik, soal, layout, dll)"
 )
 
 # =============================
@@ -31,7 +34,7 @@ st.write(
 # =============================
 prompt = st.text_area(
     "Masukkan pertanyaan / perintah",
-    placeholder="Contoh: Jelaskan diagram alir pada gambar ini atau hitung waktu baku..."
+    placeholder="Contoh: Analisis diagram alir pada gambar ini dan jelaskan pemborosan"
 )
 
 # =============================
@@ -51,29 +54,36 @@ if st.button("🔍 Proses"):
     else:
         with st.spinner("AI sedang menganalisis..."):
             try:
-                if uploaded_image:
+                # JIKA ADA GAMBAR
+                if uploaded_image is not None:
                     image = Image.open(uploaded_image)
 
-                    response = model_vision.generate_content([
-                        prompt,
-                        image
-                    ])
+                    response = model.generate_content(
+                        [prompt, image]
+                    )
 
-                    st.image(image, caption="Gambar yang dianalisis",
-                             use_column_width=True)
-                    st.success("Hasil Analisis:")
+                    st.image(
+                        image,
+                        caption="Gambar yang dianalisis",
+                        use_container_width=True
+                    )
+
+                    st.success("Hasil Analisis AI:")
                     st.write(response.text)
 
+                # JIKA HANYA TEKS
                 else:
-                    response = model_text.generate_content(prompt)
+                    response = model.generate_content(prompt)
+
                     st.success("Jawaban AI:")
                     st.write(response.text)
 
             except Exception as e:
-                st.error(f"Terjadi kesalahan: {e}")
+                st.error("Terjadi kesalahan:")
+                st.code(str(e))
 
 # =============================
 # FOOTER
 # =============================
 st.markdown("---")
-st.caption("© AI Teknik Industri | Powered by Gemini & Python")
+st.caption("© AI Teknik Industri | Powered by Gemini 1.5 & Python")
