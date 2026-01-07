@@ -10,7 +10,7 @@ genai.configure(api_key=API_KEY)
 
 # MODEL TERBARU (SUPPORT TEKS + GAMBAR)
 model = genai.GenerativeModel(
-    model_name="models/gemini-1.0-pro"
+    model_name="models/gemini-2.5-pro"
 )
 
 # =============================
