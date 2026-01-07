@@ -5,7 +5,7 @@ from PIL import Image
 # =============================
 # KONFIGURASI API GEMINI
 # =============================
-API_KEY = "AIzaSyD52TQPGxf-AEVahIe2J-WFyGPYXg9FI7Y"
+API_KEY = "AIzaSyAJ9EQwUFj-v8mg4mSvI_4DiJELomx0GXU"
 genai.configure(api_key=API_KEY)
 
 # MODEL TERBARU (SUPPORT TEKS + GAMBAR)
