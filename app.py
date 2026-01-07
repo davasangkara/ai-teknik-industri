@@ -1,17 +1,17 @@
 import streamlit as st
-import google.generativeai as genai
-from PIL import Image
+import requests
 
 # =============================
-# KONFIGURASI API GEMINI
+# KONFIGURASI API DEEPSEEK
 # =============================
-API_KEY = "AIzaSyC_KeVG9pD-9xWLXbCLu7nAB06rLdOzoRA"
-genai.configure(api_key=API_KEY)
+DEEPSEEK_API_KEY = "sk-b5bf59f93912456595d4f2885a2c8b56"
 
-# MODEL TERBARU (SUPPORT TEKS + GAMBAR)
-model = genai.GenerativeModel(
-    model_name="models/gemini-2.5-pro"
-)
+API_URL = "https://api.deepseek.com/v1/chat/completions"
+
+HEADERS = {
+    "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+    "Content-Type": "application/json"
+}
 
 # =============================
 # UI STREAMLIT
@@ -22,11 +22,12 @@ st.set_page_config(
     layout="centered"
 )
 
-st.title("🤖 AI Asisten Teknik Industri")
+st.title("🤖 AI Asisten Teknik Industri (DeepSeek)")
 st.write(
-    "Asisten AI untuk membantu mata kuliah Teknik Industri.\n\n"
-    "📌 Bisa menjawab pertanyaan teori\n"
-    "📌 Bisa menganalisis gambar (diagram, grafik, soal, layout, dll)"
+    "Asisten AI berbasis DeepSeek untuk membantu mata kuliah Teknik Industri.\n\n"
+    "📌 Mendukung tanya jawab akademik\n"
+    "📌 Analisis soal & konsep\n"
+    "📌 *Catatan: Gambar belum bisa dianalisis langsung*"
 )
 
 # =============================
@@ -34,49 +35,66 @@ st.write(
 # =============================
 prompt = st.text_area(
     "Masukkan pertanyaan / perintah",
-    placeholder="Contoh: Analisis diagram alir pada gambar ini dan jelaskan pemborosan"
+    placeholder="Contoh: Jelaskan metode work sampling dan contohnya"
 )
 
 # =============================
-# INPUT GAMBAR
+# INPUT GAMBAR (OPSIONAL)
 # =============================
 uploaded_image = st.file_uploader(
     "Upload gambar (opsional)",
     type=["jpg", "jpeg", "png"]
 )
 
+if uploaded_image:
+    st.info(
+        "⚠️ DeepSeek belum mendukung analisis gambar.\n"
+        "Silakan jelaskan isi gambar di kolom pertanyaan."
+    )
+
 # =============================
 # PROSES AI
 # =============================
 if st.button("🔍 Proses"):
     if not prompt:
-        st.warning("Masukkan pertanyaan atau perintah terlebih dahulu.")
+        st.warning("Masukkan pertanyaan terlebih dahulu.")
     else:
-        with st.spinner("AI sedang menganalisis..."):
+        with st.spinner("AI sedang berpikir..."):
             try:
-                # JIKA ADA GAMBAR
-                if uploaded_image is not None:
-                    image = Image.open(uploaded_image)
+                payload = {
+                    "model": "deepseek-chat",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": (
+                                "Kamu adalah asisten akademik khusus mata kuliah Teknik Industri. "
+                                "Jawaban harus jelas, sistematis, dan mudah dipahami mahasiswa."
+                            )
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    "temperature": 0.4
+                }
 
-                    response = model.generate_content(
-                        [prompt, image]
-                    )
+                response = requests.post(
+                    API_URL,
+                    headers=HEADERS,
+                    json=payload,
+                    timeout=60
+                )
 
-                    st.image(
-                        image,
-                        caption="Gambar yang dianalisis",
-                        use_container_width=True
-                    )
-
-                    st.success("Hasil Analisis AI:")
-                    st.write(response.text)
-
-                # JIKA HANYA TEKS
-                else:
-                    response = model.generate_content(prompt)
+                if response.status_code == 200:
+                    result = response.json()
+                    answer = result["choices"][0]["message"]["content"]
 
                     st.success("Jawaban AI:")
-                    st.write(response.text)
+                    st.write(answer)
+                else:
+                    st.error("Gagal memanggil DeepSeek API")
+                    st.code(response.text)
 
             except Exception as e:
                 st.error("Terjadi kesalahan:")
@@ -86,4 +104,4 @@ if st.button("🔍 Proses"):
 # FOOTER
 # =============================
 st.markdown("---")
-st.caption("© AI Teknik Industri | Powered by Gemini 1.5 & Python")
+st.caption("© AI Teknik Industri | Powered by DeepSeek & Python")
